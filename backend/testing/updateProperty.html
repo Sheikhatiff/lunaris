@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Update Property Details</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+        font-size: 2.5em;
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #555;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e1e8ed;
+        border-radius: 12px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.9);
+      }
+
+      input:focus,
+      textarea:focus,
+      select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-top: 10px;
+      }
+
+      .feature-item {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+        align-items: center;
+      }
+
+      .feature-item input {
+        flex: 1;
+      }
+
+      .remove-btn {
+        background: #ff4757;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+
+      .add-btn {
+        background: #2ed573;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 15px;
+        margin-top: 30px;
+      }
+
+      .load-btn {
+        flex: 1;
+        background: linear-gradient(45deg, #17a2b8, #20c997);
+        color: white;
+        border: none;
+        padding: 16px;
+        font-size: 18px;
+        font-weight: 600;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+      }
+
+      .update-btn {
+        flex: 2;
+        background: linear-gradient(45deg, #fd7e14, #ffc107);
+        color: white;
+        border: none;
+        padding: 16px;
+        font-size: 18px;
+        font-weight: 600;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+      }
+
+      .load-btn:hover,
+      .update-btn:hover {
+        transform: translateY(-2px);
+      }
+
+      .amenity-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .amenity-tag {
+        background: #f8f9fa;
+        padding: 8px 12px;
+        border-radius: 20px;
+        border: 2px solid #e9ecef;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .amenity-tag.selected {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+      }
+
+      #response {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 12px;
+        display: none;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        white-space: pre-wrap;
+        max-width: 100%;
+        overflow-x: auto;
+      }
+
+      #response pre {
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      #response.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      #response.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .debug-section {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        border-left: 4px solid #17a2b8;
+      }
+
+      .debug-section h3 {
+        color: #17a2b8;
+        margin-bottom: 10px;
+      }
+
+      .property-info {
+        background: #e7f3ff;
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        border-left: 4px solid #0066cc;
+      }
+
+      .property-info h3 {
+        color: #0066cc;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🏠 Update Property Details</h1>
+
+      <div class="form-group">
+        <label for="propertyId">Property ID *</label>
+        <input
+          type="text"
+          id="propertyId"
+          placeholder="Enter property ID to update"
+          required
+        />
+      </div>
+
+      <div class="property-info" id="propertyInfo" style="display: none">
+        <h3>📋 Current Property Information</h3>
+        <div id="currentPropertyData"></div>
+      </div>
+
+      <form id="updateForm">
+        <div class="form-group">
+          <label for="title">Property Title</label>
+          <input
+            type="text"
+            id="title"
+            name="title"
+            minlength="10"
+            maxlength="50"
+            placeholder="Enter property title (10-50 characters)"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="address">Address</label>
+          <input
+            type="text"
+            id="address"
+            name="address"
+            placeholder="Enter property address"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea
+            id="description"
+            name="description"
+            rows="4"
+            placeholder="Describe the property..."
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Property Details</label>
+          <div class="details-grid">
+            <div>
+              <label for="bedrooms">Bedrooms</label>
+              <input type="number" id="bedrooms" name="bedrooms" min="1" />
+            </div>
+            <div>
+              <label for="beds">Beds</label>
+              <input type="number" id="beds" name="beds" min="1" />
+            </div>
+            <div>
+              <label for="bathrooms">Bathrooms</label>
+              <input type="number" id="bathrooms" name="bathrooms" min="1" />
+            </div>
+            <div>
+              <label for="maxGuests">Max Guests</label>
+              <input type="number" id="maxGuests" name="maxGuests" min="1" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Amenities</label>
+          <div class="amenity-tags">
+            <div class="amenity-tag" data-amenity="wifi">WiFi</div>
+            <div class="amenity-tag" data-amenity="parking">Parking</div>
+            <div class="amenity-tag" data-amenity="pool">Swimming Pool</div>
+            <div class="amenity-tag" data-amenity="gym">Gym</div>
+            <div class="amenity-tag" data-amenity="ac">Air Conditioning</div>
+            <div class="amenity-tag" data-amenity="kitchen">Kitchen</div>
+            <div class="amenity-tag" data-amenity="balcony">Balcony</div>
+            <div class="amenity-tag" data-amenity="garden">Garden</div>
+          </div>
+          <input type="hidden" id="amenities" name="amenities" />
+        </div>
+
+        <div class="form-group">
+          <label>Features</label>
+          <div id="features">
+            <!-- Features will be dynamically loaded here -->
+          </div>
+          <button type="button" class="add-btn" onclick="addFeature()">
+            Add Feature
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label for="backendUrl">Backend URL</label>
+          <input
+            type="text"
+            id="backendUrl"
+            name="backendUrl"
+            value="http://localhost:5000/api/v1/property"
+            placeholder="Enter your backend endpoint"
+          />
+        </div>
+
+        <div class="action-buttons">
+          <button type="button" class="load-btn" onclick="loadProperty()">
+            📥 Load Current Data
+          </button>
+          <button type="submit" class="update-btn">🔄 Update Property</button>
+        </div>
+      </form>
+
+      <div id="response"></div>
+
+      <div class="debug-section" id="debugSection" style="display: none">
+        <h3>🔍 Debug Information</h3>
+        <pre id="debugInfo"></pre>
+      </div>
+    </div>
+
+    <script>
+      // Handle amenity selection
+      document.querySelectorAll(".amenity-tag").forEach((tag) => {
+        tag.addEventListener("click", function () {
+          this.classList.toggle("selected");
+          updateAmenities();
+        });
+      });
+
+      function updateAmenities() {
+        const selected = Array.from(
+          document.querySelectorAll(".amenity-tag.selected")
+        ).map((tag) => tag.dataset.amenity);
+        document.getElementById("amenities").value = JSON.stringify(selected);
+      }
+
+      function addFeature() {
+        const featuresDiv = document.getElementById("features");
+        const featureItem = document.createElement("div");
+        featureItem.className = "feature-item";
+        featureItem.innerHTML = `
+          <input type="text" name="featureName[]" placeholder="Feature name">
+          <input type="text" name="featureDescription[]" placeholder="Feature description">
+          <button type="button" class="remove-btn" onclick="removeFeature(this)">Remove</button>
+        `;
+        featuresDiv.appendChild(featureItem);
+      }
+
+      function removeFeature(btn) {
+        btn.parentElement.remove();
+      }
+
+      async function loadProperty() {
+        const propertyId = document.getElementById("propertyId").value.trim();
+        const backendUrl = document.getElementById("backendUrl").value;
+
+        if (!propertyId) {
+          showResponse("Please enter a Property ID", "error");
+          return;
+        }
+
+        try {
+          const response = await fetch(`${backendUrl}/${propertyId}`);
+
+          if (!response.ok) {
+            throw new Error(
+              `HTTP ${response.status}: ${await response.text()}`
+            );
+          }
+
+          const result = await response.json();
+          const property = result.data || result; // Handle different response structures
+
+          // Populate form fields
+          document.getElementById("title").value = property.title || "";
+          document.getElementById("address").value = property.address || "";
+          document.getElementById("description").value =
+            property.description || "";
+
+          // Populate details
+          if (property.details) {
+            document.getElementById("bedrooms").value =
+              property.details.bedrooms || "";
+            document.getElementById("beds").value = property.details.beds || "";
+            document.getElementById("bathrooms").value =
+              property.details.bathrooms || "";
+            document.getElementById("maxGuests").value =
+              property.details.maxGuests || "";
+          }
+
+          // Populate amenities
+          if (property.amenities && Array.isArray(property.amenities)) {
+            // Clear all selected amenities first
+            document.querySelectorAll(".amenity-tag").forEach((tag) => {
+              tag.classList.remove("selected");
+            });
+
+            // Select current amenities
+            property.amenities.forEach((amenity) => {
+              const tag = document.querySelector(`[data-amenity="${amenity}"]`);
+              if (tag) tag.classList.add("selected");
+            });
+            updateAmenities();
+          }
+
+          // Populate features
+          const featuresDiv = document.getElementById("features");
+          featuresDiv.innerHTML = "";
+
+          if (property.features && Array.isArray(property.features)) {
+            property.features.forEach((feature) => {
+              const featureItem = document.createElement("div");
+              featureItem.className = "feature-item";
+              featureItem.innerHTML = `
+                <input type="text" name="featureName[]" placeholder="Feature name" value="${
+                  feature.name || ""
+                }">
+                <input type="text" name="featureDescription[]" placeholder="Feature description" value="${
+                  feature.description || ""
+                }">
+                <button type="button" class="remove-btn" onclick="removeFeature(this)">Remove</button>
+              `;
+              featuresDiv.appendChild(featureItem);
+            });
+          }
+
+          // If no features, add one empty feature
+          if (!property.features || property.features.length === 0) {
+            addFeature();
+          }
+
+          // Show current property info
+          document.getElementById("propertyInfo").style.display = "block";
+          document.getElementById("currentPropertyData").innerHTML = `
+            <strong>Title:</strong> ${property.title || "N/A"}<br>
+            <strong>Address:</strong> ${property.address || "N/A"}<br>
+            <strong>Bedrooms:</strong> ${property.details?.bedrooms || "N/A"} | 
+            <strong>Beds:</strong> ${property.details?.beds || "N/A"} | 
+            <strong>Bathrooms:</strong> ${
+              property.details?.bathrooms || "N/A"
+            } | 
+            <strong>Max Guests:</strong> ${property.details?.maxGuests || "N/A"}
+          `;
+
+          showResponse("✅ Property data loaded successfully!", "success");
+        } catch (error) {
+          showResponse(`❌ Error loading property: ${error.message}`, "error");
+        }
+      }
+
+      // Handle form submission
+      document
+        .getElementById("updateForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const propertyId = document.getElementById("propertyId").value.trim();
+          const backendUrl = document.getElementById("backendUrl").value;
+
+          if (!propertyId) {
+            showResponse("Please enter a Property ID", "error");
+            return;
+          }
+
+          const form = e.target;
+          const updateData = {};
+
+          // Only include fields that have values (partial update)
+          if (form.title.value.trim())
+            updateData.title = form.title.value.trim();
+          if (form.address.value.trim())
+            updateData.address = form.address.value.trim();
+          if (form.description.value.trim())
+            updateData.description = form.description.value.trim();
+
+          // Add details if any are provided
+          const details = {};
+          if (form.bedrooms.value)
+            details.bedrooms = parseInt(form.bedrooms.value);
+          if (form.beds.value) details.beds = parseInt(form.beds.value);
+          if (form.bathrooms.value)
+            details.bathrooms = parseInt(form.bathrooms.value);
+          if (form.maxGuests.value)
+            details.maxGuests = parseInt(form.maxGuests.value);
+
+          if (Object.keys(details).length > 0) {
+            updateData.details = details;
+          }
+
+          // Add amenities if any are selected
+          const amenities = JSON.parse(form.amenities.value || "[]");
+          if (amenities.length > 0) {
+            updateData.amenities = amenities;
+          }
+
+          // Add features if any are provided
+          const featureNames = form.querySelectorAll(
+            'input[name="featureName[]"]'
+          );
+          const featureDescriptions = form.querySelectorAll(
+            'input[name="featureDescription[]"]'
+          );
+          const features = [];
+
+          for (let i = 0; i < featureNames.length; i++) {
+            if (
+              featureNames[i].value.trim() &&
+              featureDescriptions[i].value.trim()
+            ) {
+              features.push({
+                name: featureNames[i].value.trim(),
+                description: featureDescriptions[i].value.trim(),
+              });
+            }
+          }
+
+          if (features.length > 0) {
+            updateData.features = features;
+          }
+
+          // Debug: Show what's being sent
+          const debugInfo = JSON.stringify(updateData, null, 2);
+          document.getElementById("debugSection").style.display = "block";
+          document.getElementById(
+            "debugInfo"
+          ).textContent = `URL: ${backendUrl}/${propertyId}\nMethod: PATCH\nData: ${debugInfo}`;
+
+          try {
+            const response = await fetch(`${backendUrl}/${propertyId}`, {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(updateData),
+            });
+
+            const result = await response.text();
+
+            if (response.ok) {
+              showResponse(
+                `✅ Success! Property updated successfully.\n${result}`,
+                "success"
+              );
+            } else {
+              showResponse(`❌ Error: ${response.status}\n${result}`, "error");
+            }
+          } catch (error) {
+            showResponse(`❌ Network Error: ${error.message}`, "error");
+          }
+        });
+
+      function showResponse(message, type) {
+        const responseDiv = document.getElementById("response");
+        responseDiv.style.display = "block";
+        responseDiv.className = type;
+        responseDiv.innerHTML = message;
+      }
+
+      // Initialize with one feature
+      addFeature();
+    </script>
+  </body>
+</html>
