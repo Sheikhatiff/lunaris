@@ -8,23 +8,77 @@ import Property from "../model/property.model.js";
 import { deleteImagePromise } from "../utils/imageHandler.js";
 import { checkValidObjectId } from "../utils/handlerFunc.js";
 
+// export const getAllProperties = async (req, res) => {
+//   try {
+//     const properties = await Property.find().select(
+//       "-reviews -features -amenities -details -description -__v"
+//     );
+//     res.status(200).json({
+//       status: "success",
+//       results: properties.length,
+//       data: {
+//         properties,
+//       },
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       status: "error",
+//       message: error.message,
+//     });
+//   }
+// };
+
 export const getAllProperties = async (req, res) => {
   try {
-    const properties = await Property.find().select(
-      "-reviews -features -amenities -details -description -__v"
-    );
+    let queryObj = {};
+    const { sortBy, order, ...filters } = req.query;
+    Object.keys(req.query).forEach((param) => {
+      const value = req.query[param];
+
+      // check for bracket style: maxGuests[gte]
+      const match = param.match(/^(\w+)\[(gte|lte|gt|lt)\]$/);
+
+      if (match) {
+        const field = match[1]; // e.g. "maxGuests"
+        const op = match[2]; // e.g. "gte"
+
+        if (["bedrooms", "beds", "bathrooms", "maxGuests"].includes(field)) {
+          queryObj[`details.${field}`] = {
+            ...queryObj[`details.${field}`],
+            [`$${op}`]: Number(value), // convert string → number
+          };
+        }
+      } else {
+        // exact match (?bedrooms=3)
+        if (["bedrooms", "beds", "bathrooms", "maxGuests"].includes(param)) {
+          queryObj[`details.${param}`] = Number(value);
+        }
+      }
+    });
+
+    let query = Property.find(queryObj);
+    console.log("REQ QUERY:", req.query);
+
+    if (sortBy) {
+      const sortField =
+        sortBy === "recent"
+          ? "createdAt"
+          : sortBy === "rating"
+          ? "rating.average"
+          : sortBy;
+
+      query = query.sort(order === "asc" ? sortField : `-${sortField}`);
+    }
+
+    const properties = await query.exec();
+
     res.status(200).json({
       status: "success",
       results: properties.length,
-      data: {
-        properties,
-      },
+      data: properties,
     });
-  } catch (error) {
-    res.status(500).json({
-      status: "error",
-      message: error.message,
-    });
+  } catch (err) {
+    res.status(400).json({ status: "fail", message: err.message });
   }
 };
 

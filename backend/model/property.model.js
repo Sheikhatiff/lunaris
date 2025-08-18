@@ -56,8 +56,8 @@ const propertySchema = new mongoose.Schema(
       average: {
         type: Number,
         default: 4.5,
-        min: [1.0, "Tour ratings must be >= 1.0"],
-        max: [5.0, "Tour ratings must be <= 5.0"],
+        min: [1.0, "Property ratings must be >= 1.0"],
+        max: [5.0, "Property ratings must be <= 5.0"],
         set: (val) => Math.round(val * 10) / 10,
       },
       count: {
