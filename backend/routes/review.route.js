@@ -8,7 +8,6 @@ import {
 } from "../controller/review.controller.js";
 import { uploadReviewUserImage } from "../utils/imageHandler.js";
 import { restrictTo, verifyToken } from "../middlewares/auth.middleware.js";
-import { checkAuth } from "../controller/user.controller.js";
 
 const reviewRouter = express.Router();
 
